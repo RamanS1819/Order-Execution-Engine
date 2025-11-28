@@ -63,6 +63,22 @@ const worker = new Worker('order-queue', async (job) => {
     console.log(` Quotes: Raydium: ${raydiumQuote.toFixed(2)} | Meteora: ${meteoraQuote.toFixed(2)}`);
 
     const bestVenue = raydiumQuote > meteoraQuote ? 'Raydium' : 'Meteora';
+//     const bestVenue = raydiumQuote > meteoraQuote ? 'Raydium' : 'Meteora';
+
+    // --- Slippage Protection ---
+    // Compare fresh quote to expected best quote
+    const expectedPrice = Math.max(raydiumQuote, meteoraQuote);
+    const maxSlippage = 0.01; // 1% allowed
+
+    // Fetch fresh quote to simulate market movement
+    const freshQuote = await router.getQuote(bestVenue, amount);
+
+    // If market moved too much → fail the order
+    if (freshQuote < expectedPrice * (1 - maxSlippage)) {
+      await sendUpdate(orderId, 'FAILED', { error: 'Slippage exceeded' });
+      await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['FAILED', orderId]);
+      throw new Error('Slippage exceeded');
+    }
 
     // 2 - Pretend to build the transaction
     await sendUpdate(orderId, 'BUILDING_TX', { venue: bestVenue });
