@@ -51,3 +51,10 @@ src/
  ├── worker.ts    # Background job execution logic
 tests/
  └── engine.test.ts
+```
+
+## Deployment
+Deployment to a public URL will be done after submission. The project is fully runnable locally using:
+- docker-compose up -d
+- npx ts-node src/worker.ts
+- npx jest --runInBand
