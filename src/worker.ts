@@ -108,7 +108,8 @@ const worker = new Worker('order-queue', async (job) => {
     throw e; // let BullMQ retry if needed
   }
 }, { 
-  connection: new Redis(REDIS_CONNECTION)
+  connection: new Redis(REDIS_CONNECTION),
+  concurrency: 10
 });
 
 console.log("👷 Smart Worker is listening for jobs...");
